@@ -1,8 +1,9 @@
 import express from "express";
 import { 
+  addUser,
   createAdminLog, 
   getAdminLogs,getAllUserRegister
-} from "../controller/adminLogController.js";
+} from "../controller/adminController.js";
 import { 
   sendNewsletter, 
   getEmailLogs 
@@ -20,6 +21,8 @@ router.get("/system-logs", getAdminLogs);
 router.get("/all-users",authenticateToken,requireAdmin,getAllUserRegister)
 router.post("/email/send", sendNewsletter); 
 router.get("/email/logs", getEmailLogs); 
+
+router.post("/add-user",authenticateToken,requireAdmin,addUser)
 
 
 export default router;
