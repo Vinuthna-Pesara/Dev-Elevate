@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   Save,
   X,
+  Send,
   Calendar,
   TrendingUp,
   Activity,
@@ -31,10 +32,11 @@ import {
   Award,
   Target,
   Filter,
-  MessageCircle,
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import AdminFeedback from "./AdminFeedback";
+  MessageCircle
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import AdminFeedback from './AdminFeedback';
+
 import CommunityForum from "./CommunityForum";
 
 import { CiLogout } from "react-icons/ci";
@@ -129,12 +131,57 @@ const AdminDashboard: React.FC = () => {
     dateTo: string;
   };
 
-  const [filters, setFilters] = useState<FeedbackFilter>({
-    email: "",
-    status: "",
-    dateFrom: "",
-    dateTo: "",
-  });
+const [filters, setFilters] = useState<FeedbackFilter>({
+  email: '',
+  status: '',
+  dateFrom: '',
+  dateTo: '',
+});
+const goToSendNewsletter = () => {
+  console.log('Attempting to navigate to AdminNewsletterSender component.');
+  navigate("/admin/newsletter/send");
+};
+
+const goToEmailLogs = () => {
+  navigate("/admin/newsletter/logs");
+};
+const sendNewsletter = async (e: React.FormEvent) => {
+  e.preventDefault();
+  console.log('Attempting to send newsletter...');
+  console.log('Newsletter payload:', { subject, content: body, targetGroup }); // Log the data you're sending
+
+  try {
+    const response = await instance.post('/api/email/send', {
+      subject,
+      content: body,
+      targetGroup
+    });
+    console.log('✅ Newsletter API call successful:', response.data); // Log success response
+  } catch (error) {
+    console.error('❌ Newsletter API call failed:', error); // Log any errors
+  }
+};
+
+
+const renderNewsletter = () => (
+  <div className="space-y-4">
+    <h2 className="text-xl font-semibold">Newsletter Management</h2>
+    <div className="flex gap-4">
+      <button
+        onClick={goToSendNewsletter}
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        Send Newsletter
+      </button>
+      <button
+        onClick={goToEmailLogs}
+        className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+      >
+        View Logs
+      </button>
+    </div>
+  </div>
+);
 
   const [feedback, setFeedback] = useState<any[]>([]);
   const [showFilter, setShowFilter] = useState(false);
@@ -305,17 +352,19 @@ const renderQuizManagement = () => (
   };
 
   const tabs = [
-    { id: "overview", label: "Overview", icon: BarChart3 },
-    { id: "users", label: "User Management", icon: Users },
-    { id: "courses", label: "Course Management", icon: BookOpen },
-    { id: "content", label: "Content Management", icon: FileText },
+    { id: 'overview', label: 'Overview', icon: BarChart3 },
+    { id: 'users', label: 'User Management', icon: Users },
+    { id: 'courses', label: 'Course Management', icon: BookOpen },
+    { id: 'content', label: 'Content Management', icon: FileText },
     { id: "community", label: "Community", icon: Globe },
-    { id: "news", label: "News & Updates", icon: Newspaper },
+
+    { id: 'news', label: 'News & Updates', icon: Newspaper },
     { id: 'quizzes', label: 'Quiz Management', icon: Award },
-    { id: "analytics", label: "Analytics", icon: TrendingUp },
-    { id: "logs", label: "System Logs", icon: Database },
-    { id: "settings", label: "System Settings", icon: Settings },
-    { id: "feedback", label: "Feedback", icon: MessageCircle },
+    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+    { id: 'logs', label: 'System Logs', icon: Database },
+    { id: 'newsletter', label: 'Newsletter', icon: Send },
+    { id: 'settings', label: 'System Settings', icon: Settings },
+    { id: 'feedback', label:'Feedback', icon: MessageCircle }
   ];
 
   const stats = [
@@ -2578,7 +2627,9 @@ const renderQuizManagement = () => (
         return renderQuizManagement();
       case "analytics":
         return renderAnalytics();
-      case "settings":
+      case 'newsletter':
+        return renderNewsletter(); 
+      case 'settings':
         return renderSystemSettings();
       default:
         return renderFeedback();

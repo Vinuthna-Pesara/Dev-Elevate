@@ -1,34 +1,44 @@
-import jwt from "jsonwebtoken";
-import user from "../model/UserModel.js";
+import jwt from 'jsonwebtoken';
+import User from '../model/UserModel.js';
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export const authenticateToken = async (req, res, next) => {
-  const token = req.cookies?.token || req.header("Authorization")?.replace("Bearer", "").trim();
+  const token = req.cookies?.token || req.header("Authorization")?.replace("Bearer ", "").trim();
 
   if (!token) {
     return res.status(401).json({ message: "User not logged in" });
   }
 
   try {
-    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    const decodedToken = jwt.verify(token, JWT_SECRET); // Use JWT_SECRET constant
 
-    const userData = await user.findById(decodedToken?.userId).select("-password -refreshToken");
+    // --- CORRECTION HERE ---
+    // Change 'user' to 'User' (the imported model)
+    const userData = await User.findById(decodedToken?.userId).select("-password -refreshToken");
 
     if (!userData) {
-      throw new ApiError(401, "Invalid Access Token");
+      // It's good practice to send a more generic unauthorized error to avoid user enumeration
+      return res.status(401).json({ message: "Invalid Access Token" });
     }
+
     req.user = userData;
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+    console.error('Authentication Error:', error);
+    // Be specific about the type of error for debugging
+    return res.status(401).json({ message: 'Unauthorized: Invalid token or expired token' });
   }
 };
 
 export const requireAdmin = (req, res, next) => {
-  if (req.user && req.user.role === "admin") {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Forbidden" });
+    }
     next();
-  } else {
-    return res.status(403).json({ message: "Admin access required" });
+  } catch (error) {
+    console.error("Error in requireAdmin middleware:", error);
+    return res.status(500).json({ message: "Internal server errror while authorizing" });
   }
 };
-
-

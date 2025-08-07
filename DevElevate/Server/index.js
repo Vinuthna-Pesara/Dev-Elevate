@@ -11,7 +11,7 @@ import courseRoutes from "./routes/courseRoutes.js";
 import adminFeedbackRoutes from './routes/adminFeedbackRoutes.js';
 import communityRoutes from './routes/communityRoutes.js';
 import quizRoutes from './routes/quizRoutes.js'
-
+import emailRoutes from "./routes/emailRoutes.js";
 // Connect to MongoDB only if MONGO_URI is available
 if (process.env.MONGO_URI) {
   connectDB();
@@ -23,11 +23,15 @@ if (process.env.MONGO_URI) {
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
+app.use((req, res, next) => {
+  console.log('👉 Incoming request cookies:', req.cookies);
+  next();
+});
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin: 'http://localhost:5173',
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -43,7 +47,7 @@ app.use("/api/v1", userRoutes);
 
 app.use("/api/v1/community", communityRoutes); // Community routes for questions and answers
 
-
+app.use("/api/email", emailRoutes);
 
 // ADMIN ROUTES
 app.use("/api/v1/admin", adminRoutes); // general admin stuff like login, profile
@@ -57,7 +61,6 @@ app.use("/api/v1/admin/quiz", quizRoutes); //quiz-related
 app.get("/api/admin/dashboard", authenticateToken, authorize("admin"), (req, res) => {
   res.send("Hello Admin");
 });
-
 
 // Error handling middleware
 app.use((err, req, res, next) => {
